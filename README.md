@@ -1,67 +1,50 @@
-# TP1 · Spring Boot, API REST y arquitectura en capas
+# TP1 · Catálogo y Favoritos (Completado)
 
-Punto de partida del práctico. Está armada la **configuración e
-infraestructura transversal** que van a necesitar sin importar cómo
-resuelvan cada consigna; lo que falta —el diseño y la lógica propia de cada
-recurso— se va a ir sumando a esta rama a medida que avance la cursada.
+Este proyecto es la resolución del Trabajo Práctico N°1. Incluye una API REST construida con **Spring Boot** que consume productos de una API externa (DummyJSON) y permite gestionar un catálogo de favoritos (CRUD propio en memoria).
 
-## Cómo levantar el proyecto
+## 🚀 Cómo levantar el proyecto
 
-Requiere Java 25. Usar siempre el wrapper, nunca un `mvn` instalado aparte:
+Para correr el proyecto localmente, asegurate de tener Java instalado y ejecutá el siguiente comando en la terminal (desde la raíz del proyecto):
 
-```
-# Windows
+**En Windows:**
+```bash
 .\mvnw.cmd spring-boot:run
+```
 
-# macOS/Linux
+**En macOS / Linux:**
+```bash
 ./mvnw spring-boot:run
 ```
 
-Cuando el log muestre `Started DemoApplication`, la app queda escuchando en
-`http://localhost:8080`.
+Una vez que veas en la consola el mensaje `Started DemoApplication`, el servidor estará levantado en tu máquina.
 
-Para compilar y correr los tests: `./mvnw test` (o `.\mvnw.cmd test`).
+## 📖 Documentación (Swagger UI)
 
-## Endpoints disponibles hoy
+La API cuenta con documentación interactiva autogenerada gracias a `springdoc-openapi`.
+Una vez que el servidor esté corriendo, podés ver todos los endpoints, probarlos y leer sus descripciones entrando a esta URL desde tu navegador:
 
-| Método | Path | Qué hace |
-|---|---|---|
-| GET | `/health` | Chequeo de salud básico |
-| GET | `/ping` | Devuelve `pong`, sin JSON — otro chequeo trivial |
+👉 **[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)**
 
-```
-curl http://localhost:8080/health
-curl http://localhost:8080/ping
-```
+## ⚡ Endpoints Disponibles
 
-## Qué ya está armado
+### 📦 Catálogo de Productos (API Externa)
+- `GET /api/productos` - Lista todos los productos del catálogo.
+- `GET /api/productos/{id}` - Obtiene el detalle de un producto específico.
 
-- **`config/RestClientConfig`**: bean de `RestClient` apuntado a la
-  `base-url` de DummyJSON (`app.dummyjson.base-url` en
-  `application.properties`). Listo para inyectar.
-- **`config/OpenApiConfig`**: metadata general de Swagger UI.
-- **`client/dummyjson/DummyJsonProducto` y `DummyJsonProductosResponse`**:
-  la forma exacta del JSON que devuelve `https://dummyjson.com/products` —
-  para no tener que adivinar los nombres de campo del proveedor externo.
-- **`exception/GlobalExceptionHandler`** (+ `RecursoNoEncontradoException` y
-  `ServicioExternoException`): manejo uniforme de errores para toda la API
-  (`ProblemDetail`). Ya contempla 404 y errores de un servicio externo —
-  se reusa tal cual para cualquier recurso nuevo que se agregue.
+### ⭐ Favoritos (CRUD en Memoria)
+- `POST /api/favoritos` - Crea un nuevo favorito (Requiere enviar `idProductoExterno` y `notaPersonal`).
+- `GET /api/favoritos` - Lista todos los favoritos guardados.
+- `GET /api/favoritos/{id}` - Obtiene el detalle de un favorito específico.
+- `PUT /api/favoritos/{id}` - Actualiza la nota o el producto de un favorito.
+- `DELETE /api/favoritos/{id}` - Elimina un favorito del sistema.
 
-## Qué falta (eso es la consigna)
+### 🛠️ Utilidades
+- `GET /health` - Chequeo de estado de la aplicación.
+- `GET /ping` - Devuelve un simple `pong`.
 
-- Un cliente propio (`DummyJsonClient` o como se llame) que use el
-  `RestClient` ya configurado para llamar a `/products` y `/products/{id}`,
-  manejando los errores de red/HTTP con las excepciones ya definidas.
-- Un DTO propio para el producto (no el JSON externo tal cual) y el
-  service/controller de `/api/productos`.
-- Todo el recurso de favoritos: entidad, repository en memoria, DTOs,
-  service y controller CRUD.
-- Anotar los controllers con `@Tag`/`@Operation` para que Swagger UI los
-  documente.
-
-## Dependencias
-
-- `spring-boot-starter-webmvc` — Spring MVC + Tomcat embebido.
-- `spring-boot-starter-validation` — Bean Validation (`@NotNull`, `@NotBlank`, ...).
-- `springdoc-openapi-starter-webmvc-ui` — Swagger UI / OpenAPI.
+## 🛠️ Tecnologías Utilizadas
+- Spring Boot (WebMVC, Validation)
+- Java Records (para inmutabilidad de DTOs)
+- RestClient (para consumo de API externa)
+- Swagger UI / OpenAPI (para documentación)
+- Estructura de Arquitectura Limpia (Controller -> Service -> Repository -> Domain)

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+import org.springframework.web.client.RestClientException;
 import java.util.List;
 
 @Service
@@ -20,17 +21,21 @@ public class ProductoService {
     }
 
     public List<ProductoDTO> obtenerProductos() {
-        DummyJsonProductosResponse response = restClient.get()
-                .uri("/products") 
-                .retrieve()
-                .body(DummyJsonProductosResponse.class);
+        try {
+            DummyJsonProductosResponse response = restClient.get()
+                    .uri("/products") 
+                    .retrieve()
+                    .body(DummyJsonProductosResponse.class);
 
-        if (response != null && response.products() != null) {
-            return response.products().stream()
-                    .map(this::mapearADTO)
-                    .toList();
+            if (response != null && response.products() != null) {
+                return response.products().stream()
+                        .map(this::mapearADTO)
+                        .toList();
+            }
+            return List.of();
+        } catch (RestClientException e) {
+            throw new ServicioExternoException("Error al comunicarse con la API de productos");
         }
-        return List.of();
     }
 
     public ProductoDTO obtenerProductoPorId(Long id) {
@@ -44,6 +49,8 @@ public class ProductoService {
             
         } catch (HttpClientErrorException.NotFound e) {
             throw new RecursoNoEncontradoException("No se encontró el producto con ID: " + id);
+        } catch (RestClientException e) {
+            throw new ServicioExternoException("Error al comunicarse con la API de productos");
         }
     }
 
