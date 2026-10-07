@@ -4,6 +4,7 @@ import com.example.demo.client.dummyjson.DummyJsonProducto;
 import com.example.demo.client.dummyjson.DummyJsonProductosResponse;
 import com.example.demo.dto.ProductoDTO;
 import com.example.demo.exception.RecursoNoEncontradoException;
+import com.example.demo.exception.ServicioExternoException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
@@ -34,7 +35,7 @@ public class ProductoService {
             }
             return List.of();
         } catch (RestClientException e) {
-            throw new ServicioExternoException("Error al comunicarse con la API de productos");
+            throw new ServicioExternoException("Error al comunicarse con la API de productos", e);
         }
     }
 
@@ -50,7 +51,7 @@ public class ProductoService {
         } catch (HttpClientErrorException.NotFound e) {
             throw new RecursoNoEncontradoException("No se encontró el producto con ID: " + id);
         } catch (RestClientException e) {
-            throw new ServicioExternoException("Error al comunicarse con la API de productos");
+            throw new ServicioExternoException("Error al comunicarse con la API de productos", e);
         }
     }
 
