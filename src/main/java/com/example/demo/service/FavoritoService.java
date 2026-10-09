@@ -49,6 +49,7 @@ public class FavoritoService {
         // 2. Actualizamos solo los datos permitidos
         entidadExistente.setIdProductoExterno(dto.idProductoExterno());
         entidadExistente.setNotaPersonal(dto.notaPersonal());
+        entidadExistente.setListaId(dto.listaId());
         // No actualizamos el ID ni la fecha original
         
         // 3. Guardamos los cambios
@@ -71,6 +72,7 @@ public class FavoritoService {
         favorito.setIdProductoExterno(dto.idProductoExterno());
         favorito.setNotaPersonal(dto.notaPersonal());
         favorito.setFechaAgregado(LocalDate.now());
+        favorito.setListaId(dto.listaId());
         return favorito;
     }
 
@@ -79,7 +81,8 @@ public class FavoritoService {
                 entidad.getId(),
                 entidad.getIdProductoExterno(),
                 entidad.getNotaPersonal(),
-                entidad.getFechaAgregado()
+                entidad.getFechaAgregado(),
+                entidad.getListaId()
         );
     }
 }

@@ -6,5 +6,6 @@ public record FavoritoDTO(
     Long id,
     Long idProductoExterno,
     String notaPersonal,
-    LocalDate fechaAgregado
+    LocalDate fechaAgregado,
+    Long listaId
 ) {}

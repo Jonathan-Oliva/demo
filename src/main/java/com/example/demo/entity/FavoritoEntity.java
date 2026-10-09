@@ -20,6 +20,10 @@ public class FavoritoEntity {
     @Column(name = "fecha_alta", nullable = false)
     private LocalDateTime fechaAlta;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lista_id", nullable = false)
+    private ListaEntity lista;
+
     public FavoritoEntity() {}
 
     public Long getId() {
@@ -52,5 +56,13 @@ public class FavoritoEntity {
 
     public void setFechaAlta(LocalDateTime fechaAlta) {
         this.fechaAlta = fechaAlta;
+    }
+
+    public ListaEntity getLista() {
+        return lista;
+    }
+
+    public void setLista(ListaEntity lista) {
+        this.lista = lista;
     }
 }
