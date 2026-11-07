@@ -8,5 +8,6 @@ public interface ListaRepository {
     Lista save(Lista lista);
     Optional<Lista> findById(Long id);
     List<Lista> findAll();
+    List<Lista> findByUsuarioId(Long usuarioId);
     void deleteById(Long id);
 }

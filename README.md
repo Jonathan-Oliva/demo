@@ -1,48 +1,65 @@
-# TP2 · Persistencia, Migraciones y Arquitectura Hexagonal
+# TP3 — Seguridad, pruebas y CI
 
-Este proyecto es la resolución del Trabajo Práctico N°2. Evoluciona la API REST del TP1 integrando persistencia real con PostgreSQL mediante JPA/Hibernate y Flyway, aplicando el patrón de Arquitectura Hexagonal (Puertos y Adaptadores).
+API REST de productos externos y favoritos, con persistencia PostgreSQL, listas, registro de usuarios y autenticación JWT. La arquitectura separa controladores, servicios, dominio y adaptadores JPA; Flyway administra el esquema.
 
-## Cómo levantar el proyecto y la Base de Datos
+## Levantar el proyecto
 
-El proyecto ahora depende de una base de datos PostgreSQL. 
+Desde esta carpeta, iniciá PostgreSQL y la aplicación:
 
-1. **Levantar PostgreSQL (vía Docker):**
-   Abre una terminal en la raíz del proyecto y ejecuta:
-   ```bash
-   docker compose up -d
-   ```
-   Esto levantará un contenedor con PostgreSQL 17 configurado con la base `webii_tp2` y las credenciales necesarias.
+```bash
+docker compose up -d
+./mvnw spring-boot:run
+```
 
-2. **Ejecutar la API:**
-   Una vez que la base de datos esté lista, ejecuta el proyecto de Spring Boot (en la terminal o desde tu IDE):
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-   Al iniciar, Flyway aplicará automáticamente las migraciones SQL en la base de datos para crear y actualizar las tablas.
+En Windows, usá `docker compose up -d` y `.\mvnw.cmd spring-boot:run`. Swagger queda disponible en [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html).
 
-## ¿Qué cambió respecto al TP1 en la capa de persistencia?
+La configuración local tiene valores por defecto. Podés reemplazarlos con `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` y `JWT_SECRET`. Configurá una clave JWT propia y segura fuera del entorno local.
 
-Se reemplazó el almacenamiento en memoria (`Map`) por una base de datos relacional (PostgreSQL) aplicando rigurosamente el patrón de **Puertos y Adaptadores**.
+## Persistencia y arquitectura
 
-- El dominio (`Favorito`, `Lista`) y los **Puertos** (`FavoritoRepository`, `ListaRepository`) se mantuvieron puros y sin anotaciones de bases de datos.
-- El **Servicio** y el **Controlador** nunca se enteraron de que cambiamos el motor de base de datos, ya que siguen dependiendo estrictamente de la interfaz (puerto) y no de la implementación.
-- Creamos las entidades JPA (`FavoritoEntity`, `ListaEntity`) y repositorios de Spring Data (`JpaRepository`).
-- Se construyeron los **Adaptadores** (`FavoritoRepositoryAdapter`, `ListaRepositoryAdapter`) que implementan las interfaces del puerto. Ellos son la barrera que se encarga de traducir los objetos del dominio a entidades JPA para guardarlos, y viceversa al consultarlos.
+Favoritos y listas se guardan en PostgreSQL. El dominio y los puertos (`FavoritoRepository`, `ListaRepository`) no dependen de JPA; las entidades y repositorios Spring Data se conectan mediante adaptadores. Flyway administra la evolución del esquema. Las migraciones aplicadas se conservan sin editar: por ejemplo, V4 prepara los datos existentes antes de volver obligatoria la relación entre favoritos y listas.
 
-## Justificaciones
+El traslado de favoritos usa una transacción porque reasigna los favoritos y elimina la lista origen como una única operación: si un paso falla, se revierte el conjunto.
 
-### 1. Evolución del esquema
-**¿Por qué se resolvió el cambio de `lista_id` con una migración nueva (`V4`) en lugar de editar las migraciones `V1` o `V3` ya aplicadas?**
-Flyway es sumamente estricto con la integridad del esquema. Cuando aplica una migración, guarda un "checksum" (una firma digital) en su tabla interna `flyway_schema_history`. Si editáramos la `V1` o `V3` ya aplicadas, el checksum cambiaría y Flyway rechazaría arrancar el proyecto para advertirnos que el código fuente ya no coincide con lo que está corriendo en la base de datos real. Las migraciones aplicadas nunca se tocan. Cualquier evolución (como volver una columna `NOT NULL` sin romper los datos) debe hacerse agregando un archivo nuevo (`V4`) que haga un tratamiento seguro de los datos preexistentes.
+## Endpoints
 
-### 2. Transacciones (ACID)
-**¿Por qué la operación de mover favoritos tiene `@Transactional`?**
-El método `moverFavoritos` realiza un proceso de negocio de múltiples pasos: primero reasigna un grupo de favoritos a otra lista destino (varios `UPDATE` encubiertos en `save()`), y al finalizar elimina la lista original (`DELETE`). Si sacáramos el `@Transactional` y ocurriera un fallo inesperado (ej. la red se corta o la base de datos rechaza la eliminación de la lista origen por alguna restricción), quedarían los favoritos reasignados, pero la lista de origen seguiría existiendo, rompiendo por completo la consistencia de los datos del sistema. La anotación `@Transactional` garantiza la regla de **Atomicidad** (la 'A' de ACID): o se ejecutan ambos pasos de forma exitosa y se hace un commit, o se deshace todo automáticamente (rollback) dejando la base exactamente como estaba.
+- `GET /api/productos` y `GET /api/productos/{id}`: catálogo público.
+- `POST /api/auth/registro`: registro público; guarda la contraseña hasheada y asigna rol `USER`.
+- `POST /api/auth/login`: login público; devuelve un JWT Bearer válido por una hora.
+- `/api/favoritos/**`: CRUD de favoritos, requiere JWT.
+- `/api/listas/**`: operaciones de listas, requiere JWT.
+- `GET /health` y `GET /ping`: utilidades.
 
-## Documentación Interactiva (Swagger)
+En Swagger, usá `POST /api/auth/registro`, luego `POST /api/auth/login`, copiá `token` y pulsá **Authorize**. Pegá el token sin escribir el prefijo `Bearer`; Swagger lo agrega. El rol `ADMIN` puede acceder a todas las listas. El registro público solo crea usuarios `USER`.
 
-La API cuenta con documentación autogenerada:
-**[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)**
+La autorización de listas está en `ListaService`: el Controller pasa la identidad autenticada, y el servicio aplica la regla antes de operar. Así la regla de negocio se mantiene aunque otro punto de entrada reutilice el servicio. Las listas que existían antes de incorporar propietarios quedan sin dueño y solo son visibles para `ADMIN`.
 
-Ahí podrás visualizar los módulos de **Productos**, **Favoritos** y **Listas**, probando directamente los diferentes endpoints.
+## Tests
 
+Los tests unitarios terminan en `*Test` y Surefire los ejecuta con:
+
+```bash
+./mvnw test
+```
+
+Las pruebas de integración terminan en `*IT` y Failsafe las ejecuta durante `verify`:
+
+```bash
+./mvnw verify
+```
+
+`ListaServiceImplTest` y `UsuarioServiceImplTest` cubren asociación del dueño y almacenamiento exclusivo del hash. `ListaControllerIT` prueba login y autorización contra PostgreSQL 17 de Testcontainers; Docker debe estar disponible. Testcontainers inicia una base limpia en cada ejecución de integración y Flyway aplica las migraciones desde cero.
+
+## Pipeline de CI
+
+El comando que debe ejecutar el pipeline en cada push y pull request es:
+
+```bash
+./mvnw --batch-mode --no-transfer-progress verify
+```
+
+El workflow de CI todavía no está agregado.
+
+## Despliegue
+
+Los pasos de despliegue se documentarán cuando definamos el entorno y el pipeline de publicación.
