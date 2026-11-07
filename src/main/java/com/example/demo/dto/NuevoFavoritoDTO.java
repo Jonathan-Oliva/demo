@@ -8,5 +8,8 @@ public record NuevoFavoritoDTO(
     Long idProductoExterno,
     
     @NotBlank(message = "La nota personal no puede estar vacía")
-    String notaPersonal
+    String notaPersonal,
+
+    @NotNull(message = "El ID de la lista es obligatorio")
+    Long listaId
 ) {}

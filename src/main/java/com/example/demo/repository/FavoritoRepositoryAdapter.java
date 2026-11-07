@@ -12,9 +12,11 @@ import java.util.stream.Collectors;
 public class FavoritoRepositoryAdapter implements FavoritoRepository {
 
     private final FavoritoJpaRepository jpaRepository;
+    private final ListaJpaRepository listaJpaRepository;
 
-    public FavoritoRepositoryAdapter(FavoritoJpaRepository jpaRepository) {
+    public FavoritoRepositoryAdapter(FavoritoJpaRepository jpaRepository, ListaJpaRepository listaJpaRepository) {
         this.jpaRepository = jpaRepository;
+        this.listaJpaRepository = listaJpaRepository;
     }
 
     @Override
@@ -26,6 +28,9 @@ public class FavoritoRepositoryAdapter implements FavoritoRepository {
         entity.setNota(favorito.getNotaPersonal());
         // Convertimos el LocalDate del dominio a LocalDateTime para la base de datos
         entity.setFechaAlta(favorito.getFechaAgregado().atStartOfDay());
+        if (favorito.getListaId() != null) {
+            entity.setLista(listaJpaRepository.getReferenceById(favorito.getListaId()));
+        }
 
         FavoritoEntity savedEntity = jpaRepository.save(entity);
         return aDominio(savedEntity);
@@ -48,6 +53,13 @@ public class FavoritoRepositoryAdapter implements FavoritoRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public List<Favorito> findByListaId(Long listaId) {
+        return jpaRepository.findByListaId(listaId).stream()
+                .map(this::aDominio)
+                .collect(Collectors.toList());
+    }
+
     private Favorito aDominio(FavoritoEntity entity) {
         Favorito favorito = new Favorito();
         favorito.setId(entity.getId());
@@ -55,6 +67,9 @@ public class FavoritoRepositoryAdapter implements FavoritoRepository {
         favorito.setNotaPersonal(entity.getNota());
         // Convertimos el LocalDateTime de la base de datos a LocalDate para el dominio
         favorito.setFechaAgregado(entity.getFechaAlta().toLocalDate());
+        if (entity.getLista() != null) {
+            favorito.setListaId(entity.getLista().getId());
+        }
         return favorito;
     }
 }

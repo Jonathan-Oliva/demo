@@ -7,6 +7,7 @@ public class Favorito {
     private Long idProductoExterno;
     private String notaPersonal;
     private LocalDate fechaAgregado;
+    private Long listaId;
 
     public Favorito() {}
 
@@ -40,5 +41,13 @@ public class Favorito {
 
     public void setFechaAgregado(LocalDate fechaAgregado) {
         this.fechaAgregado = fechaAgregado;
+    }
+
+    public Long getListaId() {
+        return listaId;
+    }
+
+    public void setListaId(Long listaId) {
+        this.listaId = listaId;
     }
 }

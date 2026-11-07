@@ -43,6 +43,13 @@ public class GlobalExceptionHandler {
         return problema;
     }
 
+    @ExceptionHandler(AccesoDenegadoException.class)
+    public ProblemDetail handleAccesoDenegado(AccesoDenegadoException ex) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problema.setTitle("Acceso denegado");
+        return problema;
+    }
+
     @ExceptionHandler(ServicioExternoException.class)
     public ProblemDetail handleServicioExterno(ServicioExternoException ex) {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());

@@ -46,6 +46,8 @@ Una vez que el servidor esté corriendo, podés ver todos los endpoints, probarl
 
 Para acceder a rutas protegidas (`/api/favoritos/**` y `/api/listas/**`), enviá el token en `Authorization: Bearer <token>`. `/api/auth/**` y `/api/productos/**` son públicos.
 
+La autorización sobre listas se aplica en `ListaService`: el Controller obtiene la identidad autenticada del token y se la pasa al servicio; el servicio comprueba el propietario antes de cada operación individual y permite el acceso global al rol `ADMIN`. La regla vive en el servicio porque es una regla de negocio y debe aplicarse aunque el caso de uso se invoque desde otro Controller o entrada; dejarla solo en el Controller podría permitir omitirla al reutilizar el servicio. Las listas existentes antes de agregar propietarios quedan sin dueño y solo `ADMIN` puede acceder a ellas.
+
 ##  Tecnologías Utilizadas
 - Spring Boot (WebMVC, Validation)
 - Spring Security y JWT (JJWT)
@@ -70,6 +72,7 @@ Las pruebas de integración terminan en `*IT` y Failsafe las ejecuta durante la 
 ```
 
 Las pruebas de integración que usan Testcontainers necesitan Docker disponible. `verify` también ejecuta los tests unitarios.
+Las unitarias de servicios están en `ListaServiceImplTest` y `UsuarioServiceImplTest`; `ListaControllerIT` cubre login y autorización con una instancia limpia de PostgreSQL 17. Testcontainers inicia la base y Flyway aplica todas las migraciones al comienzo de cada ejecución de integración.
 
 ## Pipeline de CI
 
