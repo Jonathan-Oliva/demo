@@ -32,7 +32,9 @@ El traslado de favoritos usa una transacción porque reasigna los favoritos y el
 
 En Swagger, usá `POST /api/auth/registro`, luego `POST /api/auth/login`, copiá `token` y pulsá **Authorize**. Pegá el token sin escribir el prefijo `Bearer`; Swagger lo agrega. El rol `ADMIN` puede acceder a todas las listas. El registro público solo crea usuarios `USER`.
 
-La autorización de listas está en `ListaService`: el Controller pasa la identidad autenticada, y el servicio aplica la regla antes de operar. Así la regla de negocio se mantiene aunque otro punto de entrada reutilice el servicio. Las listas que existían antes de incorporar propietarios quedan sin dueño y solo son visibles para `ADMIN`.
+La autorización de listas vive en `ListaService`. El Controller obtiene la identidad validada por Spring Security y se la pasa al servicio; antes de leer, borrar o mover recursos, el servicio comprueba que la lista pertenezca al usuario o que su rol sea `ADMIN`. También filtra `GET /api/listas` por propietario para usuarios comunes. Si la lista existe pero pertenece a otra persona, responde `403`; si no existe, responde `404`.
+
+Elegimos el servicio porque la propiedad de una lista es una regla de negocio ligada a los datos y debe cumplirse en todas las operaciones, incluso si el servicio se reutiliza desde otro Controller o punto de entrada. El filtro JWT autentica la solicitud y construye la identidad, pero no conoce la propiedad concreta de cada recurso. Las anotaciones de seguridad sirven para reglas declarativas por endpoint o rol, no para comparar el dueño guardado con el usuario autenticado. Mantener esa comprobación en el Controller la duplicaría y permitiría que otro punto de entrada la omita. Las listas creadas antes de incorporar propietarios quedan sin dueño y solo son accesibles para `ADMIN`.
 
 ## Tests
 
