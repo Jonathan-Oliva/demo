@@ -24,9 +24,10 @@ public class OpenApiConfig {
                                 .scheme("bearer")
                                 .bearerFormat("JWT")))
                 .info(new Info()
-                        .title("TP1 · Catálogo y Favoritos")
-                        .description("Catálogo de productos (consumo de una API externa) + favoritos "
-                                + "(CRUD propio en memoria). Práctico de introducción a Spring Boot.")
+                        .title("TP3 · API de productos, favoritos y listas")
+                        .description("API REST con registro, autenticación JWT, autorización por propietario, "
+                                + "persistencia PostgreSQL y catálogo de productos externo. Los endpoints de "
+                                + "favoritos y listas requieren el esquema Bearer JWT.")
                         .version("v1"));
     }
 }

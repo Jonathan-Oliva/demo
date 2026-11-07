@@ -52,14 +52,24 @@ Las pruebas de integración terminan en `*IT` y Failsafe las ejecuta durante `ve
 
 ## Pipeline de CI
 
-El comando que debe ejecutar el pipeline en cada push y pull request es:
+GitHub Actions ejecuta el workflow **CI** en cada `push` y `pull_request`. El job compila y corre tests unitarios y de integración con:
 
 ```bash
 ./mvnw --batch-mode --no-transfer-progress verify
 ```
 
-El workflow de CI todavía no está agregado.
+Para ver el resultado, abrí la pestaña **Actions** del repositorio y seleccioná la ejecución correspondiente al commit. Una marca verde indica que `verify` terminó correctamente; una cruz roja indica que falló. Abrí el job **Build and test** y el paso de Maven para leer el error: Surefire informa fallos de clases `*Test` y Failsafe los de clases `*IT`. Las pruebas de integración usan Testcontainers y una base PostgreSQL limpia, por lo que CI no depende de una base local.
 
 ## Despliegue
 
-Los pasos de despliegue se documentarán cuando definamos el entorno y el pipeline de publicación.
+El despliegue se configura en Render mediante el Blueprint `render.yaml`. Este crea un servicio web Docker y una base PostgreSQL gratuita en la misma región. El `Dockerfile` compila la aplicación con Java 25; en ejecución, el servicio recibe `DATABASE_URL` desde la base y Render genera `JWT_SECRET`. Flyway aplica las migraciones al iniciar la aplicación.
+
+Para desplegarlo manualmente:
+
+1. Subí a GitHub los cambios que incluyen `Dockerfile`, `.dockerignore`, `render.yaml` y `application.properties`.
+2. En Render, elegí **New → Blueprint**, conectá el repositorio y seleccioná la rama `main`. Dejá el Blueprint Path como `render.yaml` (raíz del repositorio).
+3. Revisá los recursos detectados y pulsá **Deploy Blueprint**. Esperá a que terminen la creación de PostgreSQL, la compilación y el deploy del servicio.
+4. En los logs del servicio, confirmá que Spring Boot arrancó y que Flyway registró las migraciones aplicadas (`V1` a `V6`).
+5. Abrí la URL pública del servicio y comprobá `https://<servicio>.onrender.com/health`; debe responder `{"status":"ok","service":"demo"}`.
+
+La URL PostgreSQL se conecta por la red privada de Render. No pegues credenciales ni el secreto JWT en el repositorio. El plan gratuito de PostgreSQL de Render vence a los 30 días; usalo para una verificación temporal.
