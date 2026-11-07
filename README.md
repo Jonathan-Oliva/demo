@@ -62,7 +62,7 @@ Para ver el resultado, abrí la pestaña **Actions** del repositorio y seleccion
 
 ## Despliegue
 
-El despliegue se configura en Render mediante el Blueprint `render.yaml`. Este crea un servicio web Docker y una base PostgreSQL gratuita en la misma región. El `Dockerfile` compila la aplicación con Java 25; en ejecución, el servicio recibe `DATABASE_URL` desde la base y Render genera `JWT_SECRET`. Flyway aplica las migraciones al iniciar la aplicación.
+El despliegue se configura en Render mediante el Blueprint `render.yaml`. Este crea un servicio web Docker y una base PostgreSQL gratuita en la misma región. El `Dockerfile` compila la aplicación con Java 25; en ejecución, Render entrega host, puerto, nombre y credenciales de PostgreSQL mediante variables de entorno y genera `JWT_SECRET`. Flyway aplica las migraciones al iniciar la aplicación.
 
 Para desplegarlo manualmente:
 

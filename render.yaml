@@ -7,10 +7,18 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
-      - key: DATABASE_URL
+      - key: DB_HOST
         fromDatabase:
           name: web2-seguridad-db
-          property: connectionString
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: web2-seguridad-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: web2-seguridad-db
+          property: database
       - key: DB_USERNAME
         fromDatabase:
           name: web2-seguridad-db
